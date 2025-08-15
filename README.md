@@ -1,6 +1,6 @@
 # Machine-Learninng-Algorithms-implemented-in-datasets
 # 🧠 Machine Learning Algorithms Repository
-#its just me learning machine learning and documenting it 
+#its just me learning Machine learning and documenting it 
 
 This repository contains multiple folders, each dedicated to **a single machine learning algorithm** applied to a specific dataset.
 Every implementation follows a **real-world ML engineering workflow** — from data ingestion to model evaluation — so it’s both a learning resource and a showcase of best practices.
