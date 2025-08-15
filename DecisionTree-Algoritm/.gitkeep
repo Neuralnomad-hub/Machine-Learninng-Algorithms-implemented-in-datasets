@@ -1,0 +1,100 @@
+🚢 Titanic Survival Prediction with Decision Trees (Overfitting & Pruning Experiments)
+🎯 Problem Statement
+
+Predict whether a passenger survived the Titanic disaster using tabular passenger attributes.
+This project demonstrates an end-to-end ML pipeline on a classification dataset and focuses on overfitting diagnosis and mitigation for Decision Tree models.
+
+Target: survived (0 = Died, 1 = Survived)
+Outcome we want: A generalizable classifier with honest evaluation (no leakage), interpretable splits, and solid baseline to compare against ensemble methods.
+
+📥 Data Collection
+
+Dataset: seaborn.load_dataset('titanic') (891 rows × 15 columns)
+
+Features seen in code: pclass, sex, age, sibsp, parch, fare, embarked, class, who, adult_male, deck, embark_town, alive, alone
+
+Note: alive is a textual reflection of the target and can cause data leakage if used as a feature.
+
+🧹 Data Cleaning & Preprocessing
+
+Missing values handled per your code:
+
+age → median imputation
+
+embarked, embark_town → mode imputation
+
+deck → highly missing (688/891); excluded from modeling features later
+
+Encoding:
+
+sex, who, adult_male, alive, alone → LabelEncoder
+
+embark_town, class, embarked → one-hot encoding via pd.get_dummies (then converted to ints)
+
+Engineered feature: family_size = sibsp + parch + 1 (created; ensure it’s included before train/test split to use it in modeling)
+
+⚠️ Leakage warning: alive is a direct proxy of survived. Including it (even label-encoded) will yield artificially perfect scores. Exclude alive from features in any honest evaluation.
+
+🔎 Exploratory Data Analysis (EDA)
+
+Distributions: age and fare are right-skewed; median imputation stabilizes age.
+
+Survival by sex: females (encoded sex=0) show higher survival.
+
+Survival by class: pclass=1 shows higher survival than pclass=3.
+
+Feature intuition: family_size may have a non-linear effect (very large families & solo travelers often fare worse than small groups).
+
+(Your notebook includes histograms for Age/Fare and barplots for Survival by Sex and Pclass.)
+
+🧠 Model: Decision Tree Classifier
+1) Baseline
+
+Model: DecisionTreeClassifier()
+
+Split: train_test_split(test_size=0.2, random_state=42)
+
+Result observed: 1.00 accuracy/precision/recall/F1 on test set.
+
+⚠️ This is a red flag. With alive included and multiple derived indicators (class + pclass, adult_male + sex, etc.), the tree learns near-perfect rules. This indicates data leakage / redundant proxies, not true generalization.
+
+2) Regularized Tree (Manual Hyperparams)
+
+DecisionTreeClassifier(criterion='gini', max_depth=3, min_samples_split=5, min_samples_leaf=2)
+
+Still shows 1.00 metrics → leakage persists.
+
+3) Grid Search (Cross-Validation)
+
+Search space: max_depth=[3,4,5,6,None], min_samples_split=[2,5,10], min_samples_leaf=[1,2,5], criterion=['gini','entropy'], ccp_alpha=[...from pruning path]
+
+Best params (from your run): gini, max_depth=3, small ccp_alpha≈0
+
+CV score: returned ~1.0 due to leakage.
+
+4) Cost-Complexity Pruning
+
+Computed ccp_alphas and plotted train vs test accuracy over α.
+
+A pruned tree still reported 1.00 on test set → again explained by leakage.
+
+5) Tree Visualization
+
+plot_tree(...) used to inspect splits and interpret rules.
+
+📊 Results (as observed in notebook)
+precision    recall  f1-score   support
+0 (Died)       1.00      1.00      1.00       105
+1 (Survived)   1.00      1.00      1.00        74
+accuracy                              1.00       179
+
+
+✅ What this really means: The model has likely learned from leaky features (notably alive, which is the target in words). These 1.00 metrics are not trustworthy indicators of real predictive power. 
+#RESOLVING
+HI THIS IS FUTURE ME I GOT THE POTENTIAL REASON FOR NOT ABLE TO CLASSIFY EVEN AFTER MANY DIFFERENT WAYS IN THIS SAME ALGORITHM.HERE ARE THE FOLLWING FEATURE ENGINEERING WAS REQUIRED IN THE COLUMNS:
+   1. 'alive',        # leakage-->similar to 'survive; column one has to be removed
+   2. 'deck',         # too many NaN-->remove it
+   3. 'class',        # redundant with pclass-->remove any one
+   4.'.adult_male',   # redundant with sex-->remove any one
+   5.'embark_town'   # redundant with embarked-->remove anyone
+NOW IMPLEMENTING IT INTO ALGORITHM  THE OVERFITTING WOULD RESOLVE..THATS WHY IT IS IMPORTANT TO LOOK THROUHLY INTO THE FEATURES(COLUMNS OF A DATASET)
